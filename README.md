@@ -5,9 +5,8 @@ to the RESP protocol (Redis).
 
 The primary purpose of the Azure Function is to enable Redis key updates from Azure Stream Analytics jobs.
 
-If an [Azure Stream Analytics job outputs to this Azure Function](https://docs.microsoft.com/azure/stream-analytics/azure-functions-output)
-outputs data to this Azure Function, there must always be a **`metricKey`** column (case insensitive)
-such that the function knows which Redis key to upsert.
+If an [Azure Stream Analytics job outputs to this Azure Function](https://docs.microsoft.com/azure/stream-analytics/azure-functions-output),
+there must always be a **`metricKey`** column (case insensitive) such that the function knows which Redis key to upsert.
 
 ## Contributing
 
