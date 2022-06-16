@@ -3,10 +3,16 @@
 This repository contains code for an Azure Function to proxy metric key updates from HTTP calls
 to the RESP protocol (Redis).
 
-The primary purpose of the Azure Function is to enable Redis key updates from Azure Stream Analytics jobs.
+The primary purpose of the Azure Function is to enable Redis key updates from Azure Stream Analytics jobs and is referenced by the
+[microsoft/Dynamics365-Sensor-Data-Intelligence-ARMDeployments](https://github.com/microsoft/Dynamics365-Sensor-Data-Intelligence-ARMDeployments) sample repository
+for Dynamics 365 SCM Sensor Data Intelligence.
 
 If an [Azure Stream Analytics job outputs to this Azure Function](https://docs.microsoft.com/azure/stream-analytics/azure-functions-output),
 there must always be a **`metricKey`** column (case insensitive) such that the function knows which Redis key to upsert.
+
+> This sample template is made available as is. Microsoft makes no warranties, whether express or implied, of fitness for a particular purpose, of accuracy or completeness of responses, of results or conditions of merchantability.
+> The entire risk of the use or the results from the use of this sample template remains with the user.
+> No technical support is provided.
 
 ## Contributing
 
