@@ -1,0 +1,99 @@
+name: Compliance
+
+trigger: none
+
+pr: none
+
+variables:
+- template: templates/Variables-Template.yml
+
+pool: $(PoolName)
+
+schedules:
+- cron: 0 10 * * Mon # at 10AM every Monday
+  branches:
+    include:
+    - main
+  always: true
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build_Phase
+    displayName: Build
+
+    steps:
+    - checkout: self # self represents the repo where the initial Pipelines YAML file was found
+      clean: true
+      fetchDepth: 1 # the depth of commits to ask Git to fetch
+
+    - template: templates/Disable-StrongName-template.yml
+
+    - task: UseDotNet@2
+      displayName: Use .NET 6.0
+      inputs:
+        packageType: 'sdk'
+        version: '6.0.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: .NET Restore
+      inputs:
+        command: 'restore'
+        projects: '$(Build.SourcesDirectory)/src'
+
+    - task: DotNetCoreCLI@2
+      displayName: .NET Build
+      inputs:
+        command: 'build'
+        projects: '$(Build.SourcesDirectory)/src'
+        arguments: '--no-restore'
+
+    - template: templates/AntiMalware-Template.yml
+
+    - template: templates/CodeQL-Template.yml
+
+    - template: templates/TSAUpload-Template.yml
+
+    - task: ComponentGovernanceComponentDetection@0
+      displayName: Component Detection
+
+    - task: PublishSecurityAnalysisLogs@3
+      inputs:
+        ArtifactName: "CodeAnalysisLogs"
+        ArtifactType: "Container"
+
+    - template: templates/PostAnalysis-Template.yml
+
+- stage: CodeScanning
+  dependsOn: [] # this removes the implicit dependency on any previous stage and causes this to run in parallel
+  displayName: 'Source scanning'
+
+  jobs:
+  - job: CodeScanningJob
+    displayName: 'Source scanning'
+
+    variables:
+    - name: runCodesignValidationInjection
+      value: false
+
+    steps:
+    - checkout: self # self represents the repo where the initial Pipelines YAML file was found
+      clean: true
+      fetchDepth: 1 # the depth of commits to ask Git to fetch
+
+    - template: templates/CredScan-Template.yml
+
+    - template: templates/PoliCheck-Template.yml
+
+    - template: templates/ARMory-Template.yml
+
+    - template: templates/PSScriptAnalyzer-Template.yml
+
+    - template: templates/TSAUpload-Template.yml
+
+    - task: PublishSecurityAnalysisLogs@3
+      inputs:
+        ArtifactName: "CodeAnalysisLogs"
+        ArtifactType: "Container"
+
+    - template: templates/PostAnalysis-Template.yml
