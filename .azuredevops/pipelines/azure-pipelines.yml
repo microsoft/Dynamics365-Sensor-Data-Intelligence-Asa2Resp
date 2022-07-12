@@ -1,0 +1,101 @@
+name: Code Scanning
+
+trigger: none
+
+pr:
+  branches:
+    include:
+    - main
+
+variables:
+- template: templates/Variables-Template.yml
+
+pool: $(PoolName)
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build_Phase
+    displayName: Build
+    cancelTimeoutInMinutes: 1
+
+    steps:
+    - checkout: self # self represents the repo where the initial Pipelines YAML file was found
+      clean: true
+      fetchDepth: 1 # the depth of commits to ask Git to fetch
+
+    - task: UseDotNet@2
+      displayName: Use .NET 6.0
+      inputs:
+        packageType: 'sdk'
+        version: '6.0.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: .NET Restore
+      inputs:
+        command: 'restore'
+        projects: '$(Build.SourcesDirectory)/src'
+
+    - task: DotNetCoreCLI@2
+      displayName: .NET Build
+      inputs:
+        command: 'build'
+        projects: '$(Build.SourcesDirectory)/src'
+        arguments: '--no-restore'
+
+    # The following build-tasks should not be added as long as this repository does not
+    # provide pre-built binaries:
+    # - BinSkim
+    # - Code signing
+
+    - template: templates/Roslyn-Template.yml
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifact
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)
+        ArtifactName: Build
+
+    - task: ComponentGovernanceComponentDetection@0
+      displayName: Component Detection
+
+    - task: PublishSecurityAnalysisLogs@3
+      inputs:
+        ArtifactName: "CodeAnalysisLogs"
+        ArtifactType: "Container"
+
+    - template: templates/PostAnalysis-Template.yml
+
+- stage: CodeScanning
+  dependsOn: [] # this removes the implicit dependency on any previous stage and causes this to run in parallel
+  displayName: 'Source scanning'
+
+  jobs:
+  - job: CodeScanningJob
+    displayName: 'Source scanning'
+
+    variables:
+    - name: runCodesignValidationInjection
+      value: false
+
+    steps:
+    - checkout: self # self represents the repo where the initial Pipelines YAML file was found
+      clean: true
+      fetchDepth: 1
+
+    - template: templates/CredScan-Template.yml
+
+    - template: templates/PoliCheck-Template.yml
+
+    - template: templates/AntiMalware-Template.yml
+
+    - ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI') }}: # Only run on CI builds
+      - template: templates/TSAUpload-Template.yml
+
+    - task: PublishSecurityAnalysisLogs@3
+      inputs:
+        ArtifactName: "CodeAnalysisLogs"
+        ArtifactType: "Container"
+
+    - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
+      - template: templates/PostAnalysis-Template.yml

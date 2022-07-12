@@ -1,0 +1,8 @@
+steps:
+- task: PostAnalysis@2
+  inputs:
+    GdnBreakAllTools: false
+    GdnBreakGdnToolCredScan: true
+    GdnBreakGdnToolPoliCheck: true
+    GdnBreakGdnToolRoslynAnalyzers: true
+    GdnBreakGdnToolSemmle: true

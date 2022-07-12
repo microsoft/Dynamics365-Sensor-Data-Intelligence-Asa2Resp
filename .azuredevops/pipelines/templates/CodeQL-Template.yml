@@ -1,0 +1,13 @@
+steps:
+- task: Semmle@1
+  inputs:
+    sourceCodeDirectory: $(Build.SourcesDirectory)
+    language: 'csharp'
+    # a `#'-character between commands delimits multiple commands in CodeQL
+    buildCommandsString: 'dotnet clean # dotnet build --no-restore'
+    querySuite: 'Recommended'
+    timeout: '1800'
+    ram: '16384'
+    addProjectDirToScanningExclusionList: true
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
