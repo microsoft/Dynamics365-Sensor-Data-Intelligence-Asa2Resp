@@ -27,8 +27,6 @@ stages:
       clean: true
       fetchDepth: 1 # the depth of commits to ask Git to fetch
 
-    - template: templates/Disable-StrongName-template.yml
-
     - task: UseDotNet@2
       displayName: Use .NET 6.0
       inputs:
