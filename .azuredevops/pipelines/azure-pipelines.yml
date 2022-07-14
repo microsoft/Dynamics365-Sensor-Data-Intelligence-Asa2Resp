@@ -34,27 +34,22 @@ stages:
       displayName: .NET Restore
       inputs:
         command: 'restore'
-        projects: '$(Build.SourcesDirectory)/src'
+        projects: '$(Build.SourcesDirectory)'
 
     - task: DotNetCoreCLI@2
       displayName: .NET Build
       inputs:
         command: 'build'
-        projects: '$(Build.SourcesDirectory)/src'
+        projects: '$(Build.SourcesDirectory)'
         arguments: '--no-restore'
 
     # The following build-tasks should not be added as long as this repository does not
     # provide pre-built binaries:
     # - BinSkim
     # - Code signing
+    # - Build artifact publishing
 
     - template: templates/Roslyn-Template.yml
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Artifact
-      inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)
-        ArtifactName: Build
 
     - task: ComponentGovernanceComponentDetection@0
       displayName: Component Detection

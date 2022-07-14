@@ -37,13 +37,13 @@ stages:
       displayName: .NET Restore
       inputs:
         command: 'restore'
-        projects: '$(Build.SourcesDirectory)/src'
+        projects: '$(Build.SourcesDirectory)'
 
     - task: DotNetCoreCLI@2
       displayName: .NET Build
       inputs:
         command: 'build'
-        projects: '$(Build.SourcesDirectory)/src'
+        projects: '$(Build.SourcesDirectory)'
         arguments: '--no-restore'
 
     - template: templates/AntiMalware-Template.yml
