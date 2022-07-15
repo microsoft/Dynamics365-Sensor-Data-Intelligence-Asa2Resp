@@ -83,10 +83,6 @@ stages:
 
     - template: templates/PoliCheck-Template.yml
 
-    - template: templates/ARMory-Template.yml
-
-    - template: templates/PSScriptAnalyzer-Template.yml
-
     - template: templates/TSAUpload-Template.yml
 
     - task: PublishSecurityAnalysisLogs@3
