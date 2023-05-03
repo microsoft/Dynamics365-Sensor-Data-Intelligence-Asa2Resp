@@ -48,8 +48,6 @@ stages:
 
     - template: templates/AntiMalware-Template.yml
 
-    - template: templates/CodeQL-Template.yml
-
     - template: templates/TSAUpload-Template.yml
 
     - task: ComponentGovernanceComponentDetection@0
