@@ -54,6 +54,8 @@ namespace AzureStreamAnalyticsToRedisFunction
 
             IDatabase db = redis.GetDatabase();
 
+            long ignoreMetricPointsBeforeUts = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(6)).ToUnixTimeMilliseconds();
+
             foreach (JObject metricPoint in metricPoints)
             {
                 if (!(metricPoint.TryGetValue("MetricKey", StringComparison.OrdinalIgnoreCase, out JToken metricKey) && metricKey.Type == JTokenType.String))
@@ -61,9 +63,22 @@ namespace AzureStreamAnalyticsToRedisFunction
                     log.LogError($"Missing string MetricKey property for {metricPoint}");
                     continue;
                 }
+                if (!(metricPoint.TryGetValue("Uts", StringComparison.OrdinalIgnoreCase, out JToken uts) && uts.Type == JTokenType.Integer))
+                {
+                    log.LogError($"Missing unix timestamp (uts) property for {metricPoint}");
+                    continue;
+                }
 
                 string redisKey = metricKey.Value<string>();
                 string redisValue = JsonConvert.SerializeObject(metricPoint);
+
+                long metricUtsValue = uts.Value<long>();
+                if (metricUtsValue < ignoreMetricPointsBeforeUts)
+                {
+                    // skip to avoid unnecessary CPU-cycles in Redis
+                    log.LogInformation($"Skipping metric point with key ${redisKey} as its uts value is too far in the past");
+                    continue;
+                })
 
                 await db.SortedSetAddAsync(redisKey, redisValue, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             }
